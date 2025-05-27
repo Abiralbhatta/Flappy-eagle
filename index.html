@@ -13,7 +13,7 @@
       display: block;
       width: 100vw;
       height: 100vh;
-      background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg');
+      background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg'); /* updated sky background */
       background-size: cover;
     }
     #restartButton {
@@ -48,11 +48,9 @@
 <canvas id="gameCanvas"></canvas>
 <button id="restartButton">Restart Game</button>
 <div id="copyright">© 2025 Abiral Bhatta</div>
-
 <audio id="trySound" src="https://www.fesliyanstudios.com/play-mp3/4387" preload="auto"></audio>
 <audio id="congratsSound" src="https://www.fesliyanstudios.com/play-mp3/6973" preload="auto"></audio>
 <audio id="eagleSound" src="https://www.fesliyanstudios.com/play-mp3/6965" preload="auto"></audio>
-
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -67,18 +65,12 @@
   let frames = 0;
   const DEGREE = Math.PI / 180;
 
-  // Changed images to Wikimedia Commons reliable URLs
   const birdImage = new Image();
-  birdImage.crossOrigin = "anonymous";
-  birdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Bald_Eagle_Portrait.jpg/240px-Bald_Eagle_Portrait.jpg';
-
+  birdImage.src = 'https://i.imgur.com/9aPfxhN.png'; // eagle image
   const killerBirdImage = new Image();
-  killerBirdImage.crossOrigin = "anonymous";
-  killerBirdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Golden_eagle_Loparskaya_landscape_2020-06-15_2.jpg/240px-Golden_eagle_Loparskaya_landscape_2020-06-15_2.jpg';
-
+  killerBirdImage.src = 'https://i.imgur.com/VL3VYFV.png'; // enemy bird image
   const cloudImage = new Image();
-  cloudImage.crossOrigin = "anonymous";
-  cloudImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Cumulus_clouds_in_the_sky.jpg/240px-Cumulus_clouds_in_the_sky.jpg';
+  cloudImage.src = 'https://i.imgur.com/dX9YBuD.png'; // cloud image
 
   const state = {
     current: 0,
