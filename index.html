@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Flappy Eagle - Abiral Bhatta</title>
+  <title>Flappy Eagle - Fixed</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      height: 100%;
     }
     canvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
       background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg');
       background-size: cover;
     }
@@ -30,54 +27,57 @@
       display: none;
       z-index: 10;
     }
-    #copyright {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: Arial;
-      font-size: 14px;
-      color: white;
-      background-color: rgba(0, 0, 0, 0.5);
-      padding: 5px 10px;
-      border-radius: 5px;
-    }
   </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
-<button id="restartButton">Restart Game</button>
-<div id="copyright">© 2025 Abiral Bhatta</div>
-<audio id="trySound" src="https://www.fesliyanstudios.com/play-mp3/4387" preload="auto"></audio>
-<audio id="congratsSound" src="https://www.fesliyanstudios.com/play-mp3/6973" preload="auto"></audio>
-<audio id="eagleSound" src="https://www.fesliyanstudios.com/play-mp3/6965" preload="auto"></audio>
+<button id="restartButton">Restart</button>
 
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 
   const restartButton = document.getElementById('restartButton');
-  const trySound = document.getElementById('trySound');
-  const congratsSound = document.getElementById('congratsSound');
-  const eagleSound = document.getElementById('eagleSound');
 
-  let frames = 0;
-
-  // Enable cross-origin for external images
+  // Images with crossOrigin
   const birdImage = new Image();
   birdImage.crossOrigin = "anonymous";
   birdImage.src = 'https://opengameart.org/sites/default/files/eagle_0.png';
-
-  const killerBirdImage = new Image();
-  killerBirdImage.crossOrigin = "anonymous";
-  killerBirdImage.src = 'https://opengameart.org/sites/default/files/enemy_bird.png';
 
   const cloudImage = new Image();
   cloudImage.crossOrigin = "anonymous";
   cloudImage.src = 'https://opengameart.org/sites/default/files/cloud1.png';
 
+  const killerBirdImage = new Image();
+  killerBirdImage.crossOrigin = "anonymous";
+  killerBirdImage.src = 'https://opengameart.org/sites/default/files/enemy_bird.png';
+
+  let imagesLoaded = 0;
+  const totalImages = 3;
+
+  function imageLoaded() {
+    imagesLoaded++;
+    if (imagesLoaded === totalImages) {
+      initGame(); // Start only when all images are ready
+    }
+  }
+
+  birdImage.onload = imageLoaded;
+  cloudImage.onload = imageLoaded;
+  killerBirdImage.onload = imageLoaded;
+
+  birdImage.onerror = () => console.error('Bird image failed to load');
+  cloudImage.onerror = () => console.error('Cloud image failed to load');
+  killerBirdImage.onerror = () => console.error('Killer bird image failed to load');
+
+  // Game state
   const state = {
     current: 0,
     getReady: 0,
@@ -85,34 +85,7 @@
     over: 2
   };
 
-  const maxLevels = 100;
-
-  let clouds = [];
-  for (let i = 0; i < 5; i++) {
-    clouds.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height / 2 });
-  }
-
-  document.addEventListener('click', function () {
-    if (state.current === state.getReady) {
-      state.current = state.game;
-      restartButton.style.display = 'none';
-    } else if (state.current === state.game) {
-      bird.flap();
-      eagleSound.currentTime = 0;
-      eagleSound.play();
-    }
-  });
-
-  restartButton.addEventListener('click', function () {
-    pipes.reset();
-    bird.speedReset();
-    bird.y = canvas.height / 2;
-    score.reset();
-    state.current = state.getReady;
-    frames = 0;
-    restartButton.style.display = 'none';
-    loop();
-  });
+  let frames = 0;
 
   const bird = {
     x: 50,
@@ -131,12 +104,12 @@
     update() {
       this.speed += this.gravity;
       this.y += this.speed;
+
       if (this.y + this.h >= canvas.height) {
         this.y = canvas.height - this.h;
         if (state.current === state.game) {
           state.current = state.over;
           restartButton.style.display = 'block';
-          trySound.play();
         }
       }
     },
@@ -145,125 +118,67 @@
     }
   };
 
-  const pipes = {
-    position: [],
-    top: { w: 80, h: 400 },
-    bottom: { w: 80, h: 400 },
-    gap: 150,
-    dx: 2,
-    draw() {
-      for (let i = 0; i < this.position.length; i++) {
-        let p = this.position[i];
-        let texture = ctx.createLinearGradient(0, 0, 0, this.top.h);
-        texture.addColorStop(0, '#4CAF50');
-        texture.addColorStop(1, '#2E7D32');
-        ctx.fillStyle = texture;
-        ctx.fillRect(p.x, p.y, this.top.w, this.top.h);
-        ctx.fillRect(p.x, p.y + this.top.h + this.gap, this.bottom.w, this.bottom.h);
-      }
-    },
-    update() {
-      if (state.current !== state.game) return;
-      if (frames % 100 === 0) {
-        this.position.push({
-          x: canvas.width,
-          y: -Math.floor(Math.random() * this.top.h)
-        });
-      }
-      for (let i = 0; i < this.position.length; i++) {
-        let p = this.position[i];
-        p.x -= this.dx;
+  function initGame() {
+    const clouds = Array.from({ length: 5 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height / 2
+    }));
 
-        if (
-          bird.x + bird.w > p.x &&
-          bird.x < p.x + this.top.w &&
-          (bird.y < p.y + this.top.h || bird.y + bird.h > p.y + this.top.h + this.gap)
-        ) {
-          state.current = state.over;
-          restartButton.style.display = 'block';
-          trySound.play();
-        }
+    function drawClouds() {
+      for (let c of clouds) {
+        ctx.drawImage(cloudImage, c.x, c.y, 100, 60);
+      }
+    }
 
-        if (p.x + this.top.w <= 0) {
-          this.position.shift();
-          score.value++;
-          if (score.value >= maxLevels) {
-            triggerFinalEvent();
-          }
+    function updateClouds() {
+      for (let c of clouds) {
+        c.x -= 1;
+        if (c.x < -100) {
+          c.x = canvas.width + Math.random() * 200;
+          c.y = Math.random() * canvas.height / 2;
         }
       }
-    },
-    reset() {
-      this.position = [];
     }
-  };
 
-  const score = {
-    value: 0,
-    draw() {
-      ctx.fillStyle = "#fff";
-      ctx.font = "35px Arial";
-      ctx.fillText("Level: " + this.value, 20, 50);
-    },
-    reset() {
-      this.value = 0;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawClouds();
+      bird.draw();
     }
-  };
 
-  function drawClouds() {
-    for (let c of clouds) {
-      ctx.drawImage(cloudImage, c.x, c.y, 100, 60);
+    function update() {
+      bird.update();
+      updateClouds();
     }
-  }
 
-  function updateClouds() {
-    for (let c of clouds) {
-      c.x -= 1;
-      if (c.x < -100) {
-        c.x = canvas.width + Math.random() * 200;
-        c.y = Math.random() * canvas.height / 2;
-      }
-    }
-  }
-
-  function triggerFinalEvent() {
-    state.current = state.over;
-    restartButton.style.display = 'block';
-    congratsSound.play();
-    let killerX = canvas.width;
-    let killerY = bird.y;
-    const anim = setInterval(() => {
+    function loop() {
+      update();
       draw();
-      ctx.drawImage(killerBirdImage, killerX, killerY, 60, 40);
-      killerX -= 5;
-      if (killerX < bird.x + bird.w) clearInterval(anim);
-    }, 30);
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawClouds();
-    bird.draw();
-    pipes.draw();
-    score.draw();
-  }
-
-  function update() {
-    bird.update();
-    pipes.update();
-    updateClouds();
-  }
-
-  function loop() {
-    update();
-    draw();
-    frames++;
-    if (state.current !== state.over) {
-      requestAnimationFrame(loop);
+      frames++;
+      if (state.current !== state.over) {
+        requestAnimationFrame(loop);
+      }
     }
-  }
 
-  loop();
+    document.addEventListener('click', () => {
+      if (state.current === state.getReady) {
+        state.current = state.game;
+        restartButton.style.display = 'none';
+      } else if (state.current === state.game) {
+        bird.flap();
+      }
+    });
+
+    restartButton.addEventListener('click', () => {
+      bird.speedReset();
+      bird.y = canvas.height / 2;
+      state.current = state.getReady;
+      restartButton.style.display = 'none';
+      loop();
+    });
+
+    loop();
+  }
 </script>
 </body>
 </html>
