@@ -13,7 +13,7 @@
       display: block;
       width: 100vw;
       height: 100vh;
-      background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg'); /* updated sky background */
+      background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg');
       background-size: cover;
     }
     #restartButton {
@@ -51,6 +51,7 @@
 <audio id="trySound" src="https://www.fesliyanstudios.com/play-mp3/4387" preload="auto"></audio>
 <audio id="congratsSound" src="https://www.fesliyanstudios.com/play-mp3/6973" preload="auto"></audio>
 <audio id="eagleSound" src="https://www.fesliyanstudios.com/play-mp3/6965" preload="auto"></audio>
+
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -63,14 +64,15 @@
   const eagleSound = document.getElementById('eagleSound');
 
   let frames = 0;
-  const DEGREE = Math.PI / 180;
 
   const birdImage = new Image();
-  birdImage.src = 'https://i.imgur.com/9aPfxhN.png'; // eagle image
+  birdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Bald_Eagle_in_flight_-_5.jpg/640px-Bald_Eagle_in_flight_-_5.jpg';
+
   const killerBirdImage = new Image();
-  killerBirdImage.src = 'https://i.imgur.com/VL3VYFV.png'; // enemy bird image
+  killerBirdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Fierce_bird_%28Unsplash%29.jpg/640px-Fierce_bird_%28Unsplash%29.jpg';
+
   const cloudImage = new Image();
-  cloudImage.src = 'https://i.imgur.com/dX9YBuD.png'; // cloud image
+  cloudImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Clouds_in_the_sky.jpg/640px-Clouds_in_the_sky.jpg';
 
   const state = {
     current: 0,
