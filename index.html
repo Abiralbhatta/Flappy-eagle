@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Flappy Eagle - Fixed</title>
+  <title>Flappy Eagle Test</title>
   <style>
     html, body {
       margin: 0;
@@ -10,175 +10,38 @@
     }
     canvas {
       display: block;
-      background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg');
-      background-size: cover;
-    }
-    #restartButton {
-      position: absolute;
-      left: 50%;
-      top: 20px;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #ffcc00;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      display: none;
-      z-index: 10;
+      background: skyblue;
     }
   </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
-<button id="restartButton">Restart</button>
 
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
-
-  const restartButton = document.getElementById('restartButton');
-
-  // Images with crossOrigin
   const birdImage = new Image();
   birdImage.crossOrigin = "anonymous";
-  birdImage.src = 'https://opengameart.org/sites/default/files/eagle_0.png';
+  birdImage.src = 'https://i.imgur.com/9aPfxhN.png'; // Replace with known-good eagle image
 
-  const cloudImage = new Image();
-  cloudImage.crossOrigin = "anonymous";
-  cloudImage.src = 'https://opengameart.org/sites/default/files/cloud1.png';
-
-  const killerBirdImage = new Image();
-  killerBirdImage.crossOrigin = "anonymous";
-  killerBirdImage.src = 'https://opengameart.org/sites/default/files/enemy_bird.png';
-
-  let imagesLoaded = 0;
-  const totalImages = 3;
-
-  function imageLoaded() {
-    imagesLoaded++;
-    if (imagesLoaded === totalImages) {
-      initGame(); // Start only when all images are ready
-    }
-  }
-
-  birdImage.onload = imageLoaded;
-  cloudImage.onload = imageLoaded;
-  killerBirdImage.onload = imageLoaded;
-
-  birdImage.onerror = () => console.error('Bird image failed to load');
-  cloudImage.onerror = () => console.error('Cloud image failed to load');
-  killerBirdImage.onerror = () => console.error('Killer bird image failed to load');
-
-  // Game state
-  const state = {
-    current: 0,
-    getReady: 0,
-    game: 1,
-    over: 2
+  birdImage.onload = () => {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // clear white background
+    ctx.drawImage(birdImage, 100, 100, 100, 60); // draw eagle
+    console.log('Image loaded and drawn!');
   };
 
-  let frames = 0;
-
-  const bird = {
-    x: 50,
-    y: canvas.height / 2,
-    w: 60,
-    h: 40,
-    gravity: 0.25,
-    jump: 4.6,
-    speed: 0,
-    draw() {
-      ctx.drawImage(birdImage, this.x, this.y, this.w, this.h);
-    },
-    flap() {
-      this.speed = -this.jump;
-    },
-    update() {
-      this.speed += this.gravity;
-      this.y += this.speed;
-
-      if (this.y + this.h >= canvas.height) {
-        this.y = canvas.height - this.h;
-        if (state.current === state.game) {
-          state.current = state.over;
-          restartButton.style.display = 'block';
-        }
-      }
-    },
-    speedReset() {
-      this.speed = 0;
-    }
+  birdImage.onerror = () => {
+    console.error('Bird image failed to load');
+    ctx.fillStyle = 'red';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText('Image failed to load', 100, 100);
   };
-
-  function initGame() {
-    const clouds = Array.from({ length: 5 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height / 2
-    }));
-
-    function drawClouds() {
-      for (let c of clouds) {
-        ctx.drawImage(cloudImage, c.x, c.y, 100, 60);
-      }
-    }
-
-    function updateClouds() {
-      for (let c of clouds) {
-        c.x -= 1;
-        if (c.x < -100) {
-          c.x = canvas.width + Math.random() * 200;
-          c.y = Math.random() * canvas.height / 2;
-        }
-      }
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawClouds();
-      bird.draw();
-    }
-
-    function update() {
-      bird.update();
-      updateClouds();
-    }
-
-    function loop() {
-      update();
-      draw();
-      frames++;
-      if (state.current !== state.over) {
-        requestAnimationFrame(loop);
-      }
-    }
-
-    document.addEventListener('click', () => {
-      if (state.current === state.getReady) {
-        state.current = state.game;
-        restartButton.style.display = 'none';
-      } else if (state.current === state.game) {
-        bird.flap();
-      }
-    });
-
-    restartButton.addEventListener('click', () => {
-      bird.speedReset();
-      bird.y = canvas.height / 2;
-      state.current = state.getReady;
-      restartButton.style.display = 'none';
-      loop();
-    });
-
-    loop();
-  }
 </script>
 </body>
 </html>
