@@ -13,7 +13,7 @@
       display: block;
       width: 100vw;
       height: 100vh;
-      background: url('https://cdn.pixabay.com/photo/2015/12/01/20/28/road-1072823_1280.jpg'); /* realistic sky background */
+      background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg'); /* updated sky background */
       background-size: cover;
     }
     #restartButton {
@@ -69,6 +69,8 @@
   birdImage.src = 'https://i.imgur.com/9aPfxhN.png'; // eagle image
   const killerBirdImage = new Image();
   killerBirdImage.src = 'https://i.imgur.com/VL3VYFV.png'; // enemy bird image
+  const cloudImage = new Image();
+  cloudImage.src = 'https://i.imgur.com/dX9YBuD.png'; // cloud image
 
   const state = {
     current: 0,
@@ -78,6 +80,11 @@
   };
 
   const maxLevels = 100;
+
+  let clouds = [];
+  for (let i = 0; i < 5; i++) {
+    clouds.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height / 2 });
+  }
 
   document.addEventListener('click', function () {
     if (state.current === state.getReady) {
@@ -97,8 +104,8 @@
     score.reset();
     state.current = state.getReady;
     frames = 0;
-    loop();
     restartButton.style.display = 'none';
+    loop();
   });
 
   const bird = {
@@ -139,9 +146,12 @@
     gap: 150,
     dx: 2,
     draw() {
-      ctx.fillStyle = '#8B4513';
       for (let i = 0; i < this.position.length; i++) {
         let p = this.position[i];
+        let texture = ctx.createLinearGradient(0, 0, 0, this.top.h);
+        texture.addColorStop(0, '#4CAF50');
+        texture.addColorStop(1, '#2E7D32');
+        ctx.fillStyle = texture;
         ctx.fillRect(p.x, p.y, this.top.w, this.top.h);
         ctx.fillRect(p.x, p.y + this.top.h + this.gap, this.bottom.w, this.bottom.h);
       }
@@ -194,6 +204,22 @@
     }
   };
 
+  function drawClouds() {
+    for (let c of clouds) {
+      ctx.drawImage(cloudImage, c.x, c.y, 100, 60);
+    }
+  }
+
+  function updateClouds() {
+    for (let c of clouds) {
+      c.x -= 1;
+      if (c.x < -100) {
+        c.x = canvas.width + Math.random() * 200;
+        c.y = Math.random() * canvas.height / 2;
+      }
+    }
+  }
+
   function triggerFinalEvent() {
     state.current = state.over;
     restartButton.style.display = 'block';
@@ -210,6 +236,7 @@
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawClouds();
     bird.draw();
     pipes.draw();
     score.draw();
@@ -218,6 +245,7 @@
   function update() {
     bird.update();
     pipes.update();
+    updateClouds();
   }
 
   function loop() {
