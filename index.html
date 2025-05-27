@@ -1,21 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Flappy Eagle Test</title>
+  <title>Flappy Eagle - Abiral Bhatta</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      height: 100%;
     }
     canvas {
       display: block;
-      background: skyblue;
+      width: 100vw;
+      height: 100vh;
+      background: url('https://cdn.pixabay.com/photo/2015/03/26/09/54/clouds-690293_1280.jpg');
+      background-size: cover;
+    }
+    #restartButton {
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+      z-index: 10;
+    }
+    #copyright {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: Arial;
+      font-size: 14px;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
+<button id="restartButton">Restart Game</button>
+<div id="copyright">© 2025 Abiral Bhatta</div>
+
+<audio id="trySound" src="https://www.fesliyanstudios.com/play-mp3/4387" preload="auto"></audio>
+<audio id="congratsSound" src="https://www.fesliyanstudios.com/play-mp3/6973" preload="auto"></audio>
+<audio id="eagleSound" src="https://www.fesliyanstudios.com/play-mp3/6965" preload="auto"></audio>
 
 <script>
   const canvas = document.getElementById('gameCanvas');
@@ -23,25 +59,213 @@
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  const restartButton = document.getElementById('restartButton');
+  const trySound = document.getElementById('trySound');
+  const congratsSound = document.getElementById('congratsSound');
+  const eagleSound = document.getElementById('eagleSound');
+
+  let frames = 0;
+  const DEGREE = Math.PI / 180;
+
+  // Changed images to Wikimedia Commons reliable URLs
   const birdImage = new Image();
   birdImage.crossOrigin = "anonymous";
-  birdImage.src = 'https://i.imgur.com/9aPfxhN.png'; // Replace with known-good eagle image
+  birdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Bald_Eagle_Portrait.jpg/240px-Bald_Eagle_Portrait.jpg';
 
-  birdImage.onload = () => {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height); // clear white background
-    ctx.drawImage(birdImage, 100, 100, 100, 60); // draw eagle
-    console.log('Image loaded and drawn!');
+  const killerBirdImage = new Image();
+  killerBirdImage.crossOrigin = "anonymous";
+  killerBirdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Golden_eagle_Loparskaya_landscape_2020-06-15_2.jpg/240px-Golden_eagle_Loparskaya_landscape_2020-06-15_2.jpg';
+
+  const cloudImage = new Image();
+  cloudImage.crossOrigin = "anonymous";
+  cloudImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Cumulus_clouds_in_the_sky.jpg/240px-Cumulus_clouds_in_the_sky.jpg';
+
+  const state = {
+    current: 0,
+    getReady: 0,
+    game: 1,
+    over: 2
   };
 
-  birdImage.onerror = () => {
-    console.error('Bird image failed to load');
-    ctx.fillStyle = 'red';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
-    ctx.font = '20px Arial';
-    ctx.fillText('Image failed to load', 100, 100);
+  const maxLevels = 100;
+
+  let clouds = [];
+  for (let i = 0; i < 5; i++) {
+    clouds.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height / 2 });
+  }
+
+  document.addEventListener('click', function () {
+    if (state.current === state.getReady) {
+      state.current = state.game;
+      restartButton.style.display = 'none';
+    } else if (state.current === state.game) {
+      bird.flap();
+      eagleSound.currentTime = 0;
+      eagleSound.play();
+    }
+  });
+
+  restartButton.addEventListener('click', function () {
+    pipes.reset();
+    bird.speedReset();
+    bird.y = canvas.height / 2;
+    score.reset();
+    state.current = state.getReady;
+    frames = 0;
+    restartButton.style.display = 'none';
+    loop();
+  });
+
+  const bird = {
+    x: 50,
+    y: canvas.height / 2,
+    w: 60,
+    h: 40,
+    gravity: 0.25,
+    jump: 4.6,
+    speed: 0,
+    draw() {
+      ctx.drawImage(birdImage, this.x, this.y, this.w, this.h);
+    },
+    flap() {
+      this.speed = -this.jump;
+    },
+    update() {
+      this.speed += this.gravity;
+      this.y += this.speed;
+      if (this.y + this.h >= canvas.height) {
+        this.y = canvas.height - this.h;
+        if (state.current === state.game) {
+          state.current = state.over;
+          restartButton.style.display = 'block';
+          trySound.play();
+        }
+      }
+    },
+    speedReset() {
+      this.speed = 0;
+    }
   };
+
+  const pipes = {
+    position: [],
+    top: { w: 80, h: 400 },
+    bottom: { w: 80, h: 400 },
+    gap: 150,
+    dx: 2,
+    draw() {
+      for (let i = 0; i < this.position.length; i++) {
+        let p = this.position[i];
+        let texture = ctx.createLinearGradient(0, 0, 0, this.top.h);
+        texture.addColorStop(0, '#4CAF50');
+        texture.addColorStop(1, '#2E7D32');
+        ctx.fillStyle = texture;
+        ctx.fillRect(p.x, p.y, this.top.w, this.top.h);
+        ctx.fillRect(p.x, p.y + this.top.h + this.gap, this.bottom.w, this.bottom.h);
+      }
+    },
+    update() {
+      if (state.current !== state.game) return;
+      if (frames % 100 === 0) {
+        this.position.push({
+          x: canvas.width,
+          y: -Math.floor(Math.random() * this.top.h)
+        });
+      }
+      for (let i = 0; i < this.position.length; i++) {
+        let p = this.position[i];
+        p.x -= this.dx;
+
+        if (
+          bird.x + bird.w > p.x &&
+          bird.x < p.x + this.top.w &&
+          (bird.y < p.y + this.top.h || bird.y + bird.h > p.y + this.top.h + this.gap)
+        ) {
+          state.current = state.over;
+          restartButton.style.display = 'block';
+          trySound.play();
+        }
+
+        if (p.x + this.top.w <= 0) {
+          this.position.shift();
+          score.value++;
+          if (score.value >= maxLevels) {
+            triggerFinalEvent();
+          }
+        }
+      }
+    },
+    reset() {
+      this.position = [];
+    }
+  };
+
+  const score = {
+    value: 0,
+    draw() {
+      ctx.fillStyle = "#fff";
+      ctx.font = "35px Arial";
+      ctx.fillText("Level: " + this.value, 20, 50);
+    },
+    reset() {
+      this.value = 0;
+    }
+  };
+
+  function drawClouds() {
+    for (let c of clouds) {
+      ctx.drawImage(cloudImage, c.x, c.y, 100, 60);
+    }
+  }
+
+  function updateClouds() {
+    for (let c of clouds) {
+      c.x -= 1;
+      if (c.x < -100) {
+        c.x = canvas.width + Math.random() * 200;
+        c.y = Math.random() * canvas.height / 2;
+      }
+    }
+  }
+
+  function triggerFinalEvent() {
+    state.current = state.over;
+    restartButton.style.display = 'block';
+    congratsSound.play();
+    let killerX = canvas.width;
+    let killerY = bird.y;
+    const anim = setInterval(() => {
+      draw();
+      ctx.drawImage(killerBirdImage, killerX, killerY, 60, 40);
+      killerX -= 5;
+      if (killerX < bird.x + bird.w) clearInterval(anim);
+    }, 30);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawClouds();
+    bird.draw();
+    pipes.draw();
+    score.draw();
+  }
+
+  function update() {
+    bird.update();
+    pipes.update();
+    updateClouds();
+  }
+
+  function loop() {
+    update();
+    draw();
+    frames++;
+    if (state.current !== state.over) {
+      requestAnimationFrame(loop);
+    }
+  }
+
+  loop();
 </script>
 </body>
 </html>
