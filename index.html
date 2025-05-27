@@ -65,14 +65,18 @@
 
   let frames = 0;
 
+  // Enable cross-origin for external images
   const birdImage = new Image();
-  birdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Bald_Eagle_in_flight_-_5.jpg/640px-Bald_Eagle_in_flight_-_5.jpg';
+  birdImage.crossOrigin = "anonymous";
+  birdImage.src = 'https://opengameart.org/sites/default/files/eagle_0.png';
 
   const killerBirdImage = new Image();
-  killerBirdImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Fierce_bird_%28Unsplash%29.jpg/640px-Fierce_bird_%28Unsplash%29.jpg';
+  killerBirdImage.crossOrigin = "anonymous";
+  killerBirdImage.src = 'https://opengameart.org/sites/default/files/enemy_bird.png';
 
   const cloudImage = new Image();
-  cloudImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Clouds_in_the_sky.jpg/640px-Clouds_in_the_sky.jpg';
+  cloudImage.crossOrigin = "anonymous";
+  cloudImage.src = 'https://opengameart.org/sites/default/files/cloud1.png';
 
   const state = {
     current: 0,
